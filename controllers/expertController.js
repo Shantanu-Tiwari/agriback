@@ -73,5 +73,5 @@ const deleteExpert = asyncHandler(async (req, res) => {
     await expert.deleteOne();
     res.status(200).json({ message: "Expert removed" });
 });
-
-module.exports = { getExperts, getExpertById, createExpert, updateExpert, deleteExpert };
+// In expertController.js (at the end)
+export { getExperts, getExpertById, createExpert, updateExpert, deleteExpert };
