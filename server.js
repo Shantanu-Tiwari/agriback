@@ -5,6 +5,7 @@ import cors from 'cors';
 import authRoutes from './routes/authRoutes.js';
 import uploadRoutes from "./routes/uploadRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
+import expertRoutes from "./routes/expertRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -18,7 +19,7 @@ app.use(cors([]));
 app.use("/auth", authRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/reports", reportRoutes)
-
+app.use("/api/experts", expertRoutes);
 
 app.listen(PORT, ()=> {
     console.log(`Server is running on ${PORT}`)
