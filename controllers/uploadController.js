@@ -10,6 +10,9 @@ const uploadController = async (req, res) => {
         const userId = req.user.id;
         if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
+        const { name } = req.body; // ✅ Get name from request
+        if (!name || name.trim() === "") return res.status(400).json({ error: "Image name is required." });
+
         // Generate unique filename
         const fileName = `${uuidv4()}-${req.file.originalname.replace(/\s/g, "_")}`;
 
@@ -39,23 +42,31 @@ const uploadController = async (req, res) => {
         console.log("Prediction response:", prediction);
 
         // Extract only the disease name and confidence
-        const predictionText = prediction.data.length > 0
-            ? prediction.data[0].split("\n").slice(0, 2).join(" ")
-            : "No Prediction Available";
+        let diseaseName = "Unknown";
+        let confidence = "N/A";
 
-        // Save report with classification result
+        if (prediction.data && Array.isArray(prediction.data) && prediction.data.length > 0) {
+            const match = prediction.data[0].match(/Predicted:\s*([\w\s]+)\nConfidence:\s*([\d.]+)%/);
+            if (match) {
+                diseaseName = match[1].trim();
+                confidence = `${match[2]}%`;
+            }
+        }
+
+        // Save report with extracted information
         const newReport = new Report({
             userId,
+            name: name, // ✅ Store the image name properly
             imageUrl: publicURL,
             status: "Processed",
-            analysisResult: predictionText, // Only disease and confidence
+            prediction: { disease: diseaseName, confidence },
         });
 
         await newReport.save();
 
         return res.json({
             url: publicURL,
-            prediction: predictionText,
+            prediction: { disease: diseaseName, confidence },
             message: "Upload successful, report created",
         });
 
