@@ -10,10 +10,6 @@ const uploadController = async (req, res) => {
         const userId = req.user.id;
         if (!userId) return res.status(401).json({ error: "Unauthorized" });
 
-        const { name } = req.body;
-        if (!name || name.trim() === "") return res.status(400).json({ error: "Image name is required." });
-
-        // Generate unique filename
         const fileName = `${uuidv4()}-${req.file.originalname.replace(/\s/g, "_")}`;
 
         // Upload image to Supabase
@@ -21,61 +17,49 @@ const uploadController = async (req, res) => {
             contentType: req.file.mimetype,
         });
 
-        if (error) {
-            console.error("Upload Error:", error);
-            throw new Error("File upload failed");
-        }
+        if (error) throw new Error("File upload failed");
 
-        // Get public URL of the uploaded image
         const publicURL = `${process.env.SUPABASE_URL}/storage/v1/object/public/uploads/${fileName}`;
 
-        // Fetch image from Supabase and convert it to a File object for Gradio
+        // Fetch image from Supabase and convert to File object for Gradio
         const response = await fetch(publicURL);
         const blob = await response.blob();
         const file = new File([blob], fileName, { type: req.file.mimetype });
 
         // Connect to Gradio API
-        const client = await Client.connect("Sid26Roy/Farmer_prediction"); // Replace with actual Gradio Space ID
+        const client = await Client.connect("Sid26Roy/Farmer_prediction");
         const prediction = await client.predict("/predict", [handle_file(file)]);
 
-        // Log prediction response to check structure
-        console.log("Prediction response:", prediction);
+        console.log("Gradio Response:", prediction);
 
-        // Ensure prediction data is in expected format
+        // Ensure prediction contains valid data
         let diseaseName = "Unknown Disease";
-        let confidence = "0%";
+        let confidence = "N/A";
 
-        if (prediction?.data?.length > 0) {
-            const lines = prediction.data[0].split("\n"); // Split into lines
-            lines.forEach((line) => {
-                if (line.startsWith("Predicted:")) {
-                    diseaseName = line.replace("Predicted: ", "").trim();
-                } else if (line.startsWith("Confidence:")) {
-                    confidence = line.replace("Confidence: ", "").trim();
-                }
-            });
+        if (prediction && prediction.data && Array.isArray(prediction.data) && prediction.data.length > 0) {
+            const resultLines = prediction.data[0].split("\n");
+            if (resultLines.length >= 2) {
+                diseaseName = resultLines[0].replace("Predicted: ", "").trim();
+                confidence = resultLines[1].replace("Confidence: ", "").trim();
+            }
         }
 
-        // Save report in database
+        const analysisResult = `${diseaseName} (${confidence})`;
+
+        // Save report
         const newReport = new Report({
             userId,
-            name, // Store image name
             imageUrl: publicURL,
             status: "Processed",
-            prediction: {
-                disease: diseaseName,
-                confidence,
-            },
+            name: req.body.name || "Disease Report",
+            analysisResult,
         });
 
         await newReport.save();
 
         return res.json({
             url: publicURL,
-            prediction: {
-                disease: diseaseName,
-                confidence,
-            },
+            prediction: analysisResult,
             message: "Upload successful, report created",
         });
 
