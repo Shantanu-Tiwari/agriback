@@ -38,15 +38,17 @@ const uploadController = async (req, res) => {
         // Log prediction response to check structure
         console.log("Prediction response:", prediction);
 
-        // Extract prediction result
-        const predictionText = prediction.data.length > 0 ? prediction.data[0] : "No Prediction Available";
+        // Extract only the disease name and confidence
+        const predictionText = prediction.data.length > 0
+            ? prediction.data[0].split("\n").slice(0, 2).join(" ")
+            : "No Prediction Available";
 
-        // Save report in MongoDB with structured prediction
+        // Save report with classification result
         const newReport = new Report({
             userId,
             imageUrl: publicURL,
             status: "Processed",
-            analysisResult: predictionText, // ✅ Save in the correct field
+            analysisResult: predictionText, // Only disease and confidence
         });
 
         await newReport.save();
