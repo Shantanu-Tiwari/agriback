@@ -1,7 +1,7 @@
 import { supabase } from "../supabaseClient.js";
 import { v4 as uuidv4 } from "uuid";
 import Report from "../models/Report.js";
-import { Client, handle_file } from "https://cdn.jsdelivr.net/npm/@gradio/client/dist/index.min.js";
+import { Client, handle_file } from "@gradio/client"; // ✅ Using local package
 
 const uploadController = async (req, res) => {
     if (!req.file) return res.status(400).json({ error: "No file uploaded" });
@@ -26,13 +26,13 @@ const uploadController = async (req, res) => {
         // Get public URL of the uploaded image
         const publicURL = `${process.env.SUPABASE_URL}/storage/v1/object/public/uploads/${fileName}`;
 
-        // Fetch image from Supabase and convert it to a file format for Gradio
+        // Fetch image from Supabase and convert it to a File object for Gradio
         const response = await fetch(publicURL);
         const blob = await response.blob();
         const file = new File([blob], fileName, { type: req.file.mimetype });
 
         // Connect to Gradio API
-        const client = await Client.connect("Sid26Roy/Farmer_prediction"); // Replace with actual space ID
+        const client = await Client.connect("Sid26Roy/Farmer_prediction"); // Replace with actual Gradio Space ID
         const prediction = await client.predict("/predict", [handle_file(file)]);
 
         // Save report with classification result
