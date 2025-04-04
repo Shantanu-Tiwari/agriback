@@ -3,6 +3,6 @@ import { getDiseaseInfo } from "../controllers/geminiController.js";
 
 const router = express.Router();
 
-router.post("/gemini", getDiseaseInfo);
+router.post("/", getDiseaseInfo);
 
 export default router;
