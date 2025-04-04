@@ -1,24 +1,27 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 export const getDiseaseInfo = async (req, res) => {
-    const { disease } = req.body;
+    console.log("Received request body:", req.body); // Debugging
 
-    if (!disease) {
-        return res.status(400).json({ error: "Disease name is required." });
+    const { query } = req.body;  // Ensure frontend sends `query`
+
+    if (!query) {
+        return res.status(400).json({ error: "Query is required." });
     }
 
     try {
-        const response = await ai.models.generateContent({
-            model: "gemini-2.0-flash",
-            contents: `Explain the disease ${disease}. Provide its cure and prevention.`,
-        });
+        const response = await model.generateContent(query);
 
-        res.json({ result: response.text || "No response from AI." });
+        // Extract the AI response correctly
+        const aiResponse = response?.candidates?.[0]?.content?.parts?.[0]?.text || "No response from AI.";
+
+        res.json({ result: aiResponse });
     } catch (error) {
         console.error("Gemini API Error:", error);
         res.status(500).json({ error: "Failed to fetch AI response." });
