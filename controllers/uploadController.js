@@ -35,12 +35,15 @@ const uploadController = async (req, res) => {
         const client = await Client.connect("Sid26Roy/Farmer_prediction"); // Replace with actual Gradio Space ID
         const prediction = await client.predict("/predict", [handle_file(file)]);
 
+        // Log prediction response to check structure
+        console.log("Prediction response:", prediction);
+
         // Save report with classification result
         const newReport = new Report({
             userId,
             imageUrl: publicURL,
             status: "Processed",
-            prediction: prediction.data, // Store the result from the model
+            prediction: JSON.stringify(prediction.data), // Ensure correct format for MongoDB
         });
 
         await newReport.save();
