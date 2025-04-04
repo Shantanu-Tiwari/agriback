@@ -38,19 +38,22 @@ const uploadController = async (req, res) => {
         // Log prediction response to check structure
         console.log("Prediction response:", prediction);
 
-        // Save report with classification result
+        // Extract prediction result
+        const predictionText = prediction.data.length > 0 ? prediction.data[0] : "No Prediction Available";
+
+        // Save report in MongoDB with structured prediction
         const newReport = new Report({
             userId,
             imageUrl: publicURL,
             status: "Processed",
-            prediction: JSON.stringify(prediction.data), // Ensure correct format for MongoDB
+            analysisResult: predictionText, // ✅ Save in the correct field
         });
 
         await newReport.save();
 
         return res.json({
             url: publicURL,
-            prediction: prediction.data,
+            prediction: predictionText,
             message: "Upload successful, report created",
         });
 
