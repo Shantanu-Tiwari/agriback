@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const ExpertRequestSchema = new mongoose.Schema(
     {
@@ -30,4 +30,4 @@ const ExpertRequestSchema = new mongoose.Schema(
 );
 
 const ExpertRequest = mongoose.model("ExpertRequest", ExpertRequestSchema);
-module.exports = ExpertRequest;
+export default ExpertRequest;

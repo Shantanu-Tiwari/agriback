@@ -1,5 +1,5 @@
-const Expert = require("../models/Expert");
-const asyncHandler = require("express-async-handler");
+import Expert from "../models/Expert.js";
+import asyncHandler from "express-async-handler";
 
 // @desc    Get all experts
 // @route   GET /api/experts
@@ -25,14 +25,14 @@ const getExpertById = asyncHandler(async (req, res) => {
 // @route   POST /api/experts
 // @access  Admin
 const createExpert = asyncHandler(async (req, res) => {
-    const { name, specialty, image, rating } = req.body;
+    const { name, specialization, phone, email, bio } = req.body;
 
-    if (!name || !specialty) {
+    if (!name || !specialization || !phone || !email) {
         res.status(400);
         throw new Error("Please provide all required fields");
     }
 
-    const expert = new Expert({ name, specialty, image, rating });
+    const expert = new Expert({ name, specialization, phone, email, bio });
     const createdExpert = await expert.save();
 
     res.status(201).json(createdExpert);
@@ -42,7 +42,7 @@ const createExpert = asyncHandler(async (req, res) => {
 // @route   PUT /api/experts/:id
 // @access  Admin
 const updateExpert = asyncHandler(async (req, res) => {
-    const { name, specialty, image, rating } = req.body;
+    const { name, specialization, phone, email, bio } = req.body;
     const expert = await Expert.findById(req.params.id);
 
     if (!expert) {
@@ -51,9 +51,10 @@ const updateExpert = asyncHandler(async (req, res) => {
     }
 
     expert.name = name || expert.name;
-    expert.specialty = specialty || expert.specialty;
-    expert.image = image || expert.image;
-    expert.rating = rating || expert.rating;
+    expert.specialization = specialization || expert.specialization;
+    expert.phone = phone || expert.phone;
+    expert.email = email || expert.email;
+    expert.bio = bio || expert.bio;
 
     const updatedExpert = await expert.save();
     res.status(200).json(updatedExpert);
@@ -73,5 +74,5 @@ const deleteExpert = asyncHandler(async (req, res) => {
     await expert.deleteOne();
     res.status(200).json({ message: "Expert removed" });
 });
-// In expertController.js (at the end)
+
 export { getExperts, getExpertById, createExpert, updateExpert, deleteExpert };
